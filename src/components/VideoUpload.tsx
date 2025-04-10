@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box,
   Button,
@@ -40,6 +40,19 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ isOpen, onClose, onUploadComp
   const [uploadProgress, setUploadProgress] = useState(0);
   const toast = useToast();
   const modalSize = useBreakpointValue({ base: 'full', md: 'xl' });
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const resetForm = () => {
+    if (formRef.current) {
+      formRef.current.reset();
+      setUploadProgress(0);
+    }
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
 
   const handleFileUpload = async (formData: FormData) => {
     const file = formData.get('video') as File;
@@ -96,6 +109,8 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ isOpen, onClose, onUploadComp
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (isLoading) return;
+
     setIsLoading(true);
     setUploadProgress(0);
 
@@ -110,11 +125,6 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ isOpen, onClose, onUploadComp
           description: formData.get('description') as string,
           category: formData.get('category') as string,
         });
-        toast({
-          title: 'Video updated successfully',
-          status: 'success',
-          duration: 3000,
-        });
       } else {
         // Handle create mode
         if (isYouTube) {
@@ -122,16 +132,16 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ isOpen, onClose, onUploadComp
         } else {
           await handleFileUpload(formData);
         }
-        toast({
-          title: 'Video added successfully',
-          status: 'success',
-          duration: 3000,
-        });
       }
 
+      toast({
+        title: editVideo ? 'Video updated successfully' : 'Video added successfully',
+        status: 'success',
+        duration: 3000,
+      });
+
       onUploadComplete();
-      onClose();
-      e.currentTarget.reset();
+      handleClose();
     } catch (error) {
       toast({
         title: editVideo ? 'Update failed' : 'Upload failed',
@@ -141,16 +151,22 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ isOpen, onClose, onUploadComp
       });
     } finally {
       setIsLoading(false);
-      setUploadProgress(0);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size={modalSize} isCentered>
+    <Modal 
+      isOpen={isOpen} 
+      size={modalSize} 
+      isCentered 
+      closeOnOverlayClick={false} 
+      closeOnEsc={false}
+      onClose={() => {}}
+    >
       <ModalOverlay />
       <ModalContent>
         <ModalHeader>{editVideo ? 'Edit Video' : 'Add New Video'}</ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton onClick={handleClose} />
         <ModalBody pb={6}>
           <Tabs isFitted variant="enclosed" colorScheme="blue" defaultIndex={editVideo ? 0 : undefined}>
             <TabList mb="1em">
@@ -165,7 +181,7 @@ const VideoUpload: React.FC<VideoUploadProps> = ({ isOpen, onClose, onUploadComp
             </TabList>
             <TabPanels>
               <TabPanel px={0}>
-                <form onSubmit={handleSubmit}>
+                <form ref={formRef} onSubmit={handleSubmit}>
                   <VStack spacing={4}>
                     {!editVideo && (
                       <FormControl isRequired>
