@@ -1,6 +1,5 @@
 import { ChakraProvider, Box, Heading } from '@chakra-ui/react';
 import VideoLibrary from './components/VideoLibrary';
-import { sampleVideos } from './data/videos';
 import theme from './theme';
 
 function App() {
@@ -11,7 +10,7 @@ function App() {
           <Heading size="lg">Driver Training Portal</Heading>
         </Box>
         <Box maxW="1200px" mx="auto" p={4}>
-          <VideoLibrary videos={sampleVideos} />
+          <VideoLibrary />
         </Box>
       </Box>
     </ChakraProvider>
